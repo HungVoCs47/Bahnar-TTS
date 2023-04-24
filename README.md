@@ -52,6 +52,7 @@ You should create `Bahnar-TTS\logs\bahnar_exp ` directory and `Bahnar-TTS\checkp
 
 After setup phase, the repo should look like this:
 
+```bash
 ── Bahnar-TTS
     │
     │
@@ -62,6 +63,7 @@ After setup phase, the repo should look like this:
     └── logs 
           └── bahnar_exp
                     └── grad_1344.pt
+```
     
 
 # Voice Conversion setup:
@@ -74,7 +76,7 @@ You should create `Bahnar-TTS\checkpts_vc ` directory, under `Bahnar-TTS\checkpt
 3) You can download pretrained Encoder (22kHz) from [here](https://drive.google.com/drive/u/1/folders/1nu5al-OZs-jL0o5w2b5YzWDS5SWMJqUJ) and put it under directory `Bahnar-TTS\checkpts_vc\spk_encoder `.
 
 After setup phase, the repo should look like this:
-
+```bash
 ── Bahnar-TTS
     └──checkpts_vc
           ├── spk_encoder
@@ -90,7 +92,7 @@ After setup phase, the repo should look like this:
           └── vocoder
                  │  
                  └────────── generator
-
+```
 
 # Data setup:
 After put necessary all model checkpoints into `checkpts ` folder and `checkpts_vc ` folder. You should create your own data-source. You should create `Bahnar-TTS\document ` to store your own data. 
@@ -98,6 +100,7 @@ After put necessary all model checkpoints into `checkpts ` folder and `checkpts_
 2. Create target audio file you want to converse the voice like `Bahnar-TTS\document\target_sound\0001.wav `.
 You can dowload the pattern audio file and text file in this.
 After create the data source, the repo should look like this: [here](https://drive.google.com/drive/u/1/folders/1v40EtocaeHwKeP7j2eUsrTBvUYp5BIwY).
+```bash
 ── Bahnar-TTS
     └── document 
            ├──────── target_sound
@@ -105,7 +108,7 @@ After create the data source, the repo should look like this: [here](https://dri
            │  
            └──────── text
                        └────────── text.txt
-
+```
 # Inference command:
 1) If you want to synthesize only text-to-speech without voice conversion, you should use this command:
     ```bash
