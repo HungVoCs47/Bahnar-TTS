@@ -5,7 +5,7 @@
 
 # Grad-TTS
 
-End-to-end implementation of the Grad-TTS model and Voice Conversion model based on Diffusion Probabilistic Modelling. For all details check out paper accepted to ICML 2021 via [this](https://arxiv.org/abs/2105.06337) link.
+This is an End-to-end implementation of the Grad-TTS model and Voice Conversion model based on Diffusion Probabilistic Modelling.
 
 
 ## Abstract
