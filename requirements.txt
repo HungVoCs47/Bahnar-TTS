@@ -1,0 +1,13 @@
+Cython
+numpy
+matplotlib
+einops
+inflect
+Unidecode
+librosa
+scipy
+tqdm
+IPython
+vietnam_number
+flask
+gunicorn==20.1.0
