@@ -15,8 +15,11 @@ from model.modules import Mish
 class Block(BaseModule):
     def __init__(self, dim, groups=8):
         super(Block, self).__init__()
-        self.block = torch.nn.Sequential(torch.nn.Conv2d(dim, dim, 7, 
-                     padding=3), torch.nn.GroupNorm(groups, dim), Mish())
+        self.block = torch.nn.Sequential(
+            torch.nn.Conv2d(dim, dim, 7, padding=3),
+            torch.nn.GroupNorm(groups, dim),
+            Mish(),
+        )
 
     def forward(self, x, mask):
         output = self.block(x * mask)

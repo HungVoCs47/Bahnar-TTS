@@ -22,7 +22,7 @@ def intersperse(lst, item):
 
 
 def parse_filelist(filelist_path, split_char="|"):
-    with open(filelist_path, encoding='utf-8') as f:
+    with open(filelist_path, encoding="utf-8") as f:
         filepaths_and_text = [line.strip().split(split_char) for line in f]
     return filepaths_and_text
 
@@ -39,22 +39,22 @@ def load_checkpoint(logdir, model, num=None):
         model_path = latest_checkpoint_path(logdir, regex="grad_*.pt")
     else:
         model_path = os.path.join(logdir, f"grad_{num}.pt")
-    print(f'Loading checkpoint {model_path}...')
+    print(f"Loading checkpoint {model_path}...")
     model_dict = torch.load(model_path, map_location=lambda loc, storage: loc)
     model.load_state_dict(model_dict, strict=False)
     return model
 
 
 def save_figure_to_numpy(fig):
-    data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
+    data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep="")
     data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     return data
 
 
 def plot_tensor(tensor):
-    plt.style.use('default')
+    plt.style.use("default")
     fig, ax = plt.subplots(figsize=(12, 3))
-    im = ax.imshow(tensor, aspect="auto", origin="lower", interpolation='none')
+    im = ax.imshow(tensor, aspect="auto", origin="lower", interpolation="none")
     plt.colorbar(im, ax=ax)
     plt.tight_layout()
     fig.canvas.draw()
@@ -64,9 +64,9 @@ def plot_tensor(tensor):
 
 
 def save_plot(tensor, savepath):
-    plt.style.use('default')
+    plt.style.use("default")
     fig, ax = plt.subplots(figsize=(12, 3))
-    im = ax.imshow(tensor, aspect="auto", origin="lower", interpolation='none')
+    im = ax.imshow(tensor, aspect="auto", origin="lower", interpolation="none")
     plt.colorbar(im, ax=ax)
     plt.tight_layout()
     fig.canvas.draw()

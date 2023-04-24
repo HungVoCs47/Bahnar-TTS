@@ -14,9 +14,9 @@ class Utterance:
     def random_partial(self, n_frames):
         """
         Crops the frames into a partial utterance of n_frames
-        
+
         :param n_frames: The number of frames of the partial utterance
-        :return: the partial utterance frames and a tuple indicating the start and end of the 
+        :return: the partial utterance frames and a tuple indicating the start and end of the
         partial utterance in the complete utterance.
         """
         frames = self.get_frames()

@@ -17,8 +17,18 @@ from model.utils_vc import sequence_mask, fix_len_compatibility, mse_loss
 
 # "average voice" encoder as the module parameterizing the diffusion prior
 class FwdDiffusion(BaseModule):
-    def __init__(self, n_feats, channels, filters, heads, layers, kernel, 
-                 dropout, window_size, dim):
+    def __init__(
+        self,
+        n_feats,
+        channels,
+        filters,
+        heads,
+        layers,
+        kernel,
+        dropout,
+        window_size,
+        dim,
+    ):
         super(FwdDiffusion, self).__init__()
         self.n_feats = n_feats
         self.channels = channels
@@ -29,8 +39,9 @@ class FwdDiffusion(BaseModule):
         self.dropout = dropout
         self.window_size = window_size
         self.dim = dim
-        self.encoder = MelEncoder(n_feats, channels, filters, heads, layers, 
-                                  kernel, dropout, window_size)
+        self.encoder = MelEncoder(
+            n_feats, channels, filters, heads, layers, kernel, dropout, window_size
+        )
         self.postnet = PostNet(dim)
 
     @torch.no_grad()
@@ -48,12 +59,26 @@ class FwdDiffusion(BaseModule):
         return loss
 
 
-# the whole voice conversion model consisting of the "average voice" encoder 
+# the whole voice conversion model consisting of the "average voice" encoder
 # and the diffusion-based speaker-conditional decoder
 class DiffVC(BaseModule):
-    def __init__(self, n_feats, channels, filters, heads, layers, kernel, 
-                 dropout, window_size, enc_dim, spk_dim, use_ref_t, dec_dim, 
-                 beta_min, beta_max):
+    def __init__(
+        self,
+        n_feats,
+        channels,
+        filters,
+        heads,
+        layers,
+        kernel,
+        dropout,
+        window_size,
+        enc_dim,
+        spk_dim,
+        use_ref_t,
+        dec_dim,
+        beta_min,
+        beta_max,
+    ):
         super(DiffVC, self).__init__()
         self.n_feats = n_feats
         self.channels = channels
@@ -69,24 +94,33 @@ class DiffVC(BaseModule):
         self.dec_dim = dec_dim
         self.beta_min = beta_min
         self.beta_max = beta_max
-        self.encoder = FwdDiffusion(n_feats, channels, filters, heads, layers,
-                                    kernel, dropout, window_size, enc_dim)
-        self.decoder = Diffusion(n_feats, dec_dim, spk_dim, use_ref_t, 
-                                 beta_min, beta_max)
+        self.encoder = FwdDiffusion(
+            n_feats,
+            channels,
+            filters,
+            heads,
+            layers,
+            kernel,
+            dropout,
+            window_size,
+            enc_dim,
+        )
+        self.decoder = Diffusion(
+            n_feats, dec_dim, spk_dim, use_ref_t, beta_min, beta_max
+        )
 
     def load_encoder(self, enc_path):
         enc_dict = torch.load(enc_path, map_location=lambda loc, storage: loc)
         self.encoder.load_state_dict(enc_dict, strict=False)
 
     @torch.no_grad()
-    def forward(self, x, x_lengths, x_ref, x_ref_lengths, c, n_timesteps, 
-                mode='ml'):
+    def forward(self, x, x_lengths, x_ref, x_ref_lengths, c, n_timesteps, mode="ml"):
         """
         Generates mel-spectrogram from source mel-spectrogram conditioned on
         target speaker embedding. Returns:
             1. 'average voice' encoder outputs
             2. decoder outputs
-        
+
         Args:
             x (torch.Tensor): batch of source mel-spectrograms.
             x_lengths (torch.Tensor): numbers of frames in source mel-spectrograms.
@@ -111,25 +145,28 @@ class DiffVC(BaseModule):
         max_length = int(x_lengths.max())
         max_length_new = fix_len_compatibility(max_length)
         x_mask_new = sequence_mask(x_lengths, max_length_new).unsqueeze(1).to(x.dtype)
-        mean_new = torch.zeros((b, self.n_feats, max_length_new), dtype=x.dtype, 
-                                device=x.device)
-        mean_x_new = torch.zeros((b, self.n_feats, max_length_new), dtype=x.dtype, 
-                                  device=x.device)
+        mean_new = torch.zeros(
+            (b, self.n_feats, max_length_new), dtype=x.dtype, device=x.device
+        )
+        mean_x_new = torch.zeros(
+            (b, self.n_feats, max_length_new), dtype=x.dtype, device=x.device
+        )
         for i in range(b):
-            mean_new[i, :, :x_lengths[i]] = mean[i, :, :x_lengths[i]]
-            mean_x_new[i, :, :x_lengths[i]] = mean_x[i, :, :x_lengths[i]]
+            mean_new[i, :, : x_lengths[i]] = mean[i, :, : x_lengths[i]]
+            mean_x_new[i, :, : x_lengths[i]] = mean_x[i, :, : x_lengths[i]]
 
         z = mean_x_new
         z += torch.randn_like(mean_x_new, device=mean_x_new.device)
 
-        y = self.decoder(z, x_mask_new, mean_new, x_ref, x_ref_mask, mean_ref, c, 
-                         n_timesteps, mode)
+        y = self.decoder(
+            z, x_mask_new, mean_new, x_ref, x_ref_mask, mean_ref, c, n_timesteps, mode
+        )
         return mean_x, y[:, :, :max_length]
 
     def compute_loss(self, x, x_lengths, x_ref, c):
         """
         Computes diffusion (score matching) loss.
-            
+
         Args:
             x (torch.Tensor): batch of source mel-spectrograms.
             x_lengths (torch.Tensor): numbers of frames in source mel-spectrograms.

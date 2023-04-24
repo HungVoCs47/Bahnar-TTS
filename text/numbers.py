@@ -6,41 +6,41 @@ import re
 
 
 _inflect = inflect.engine()
-_comma_number_re = re.compile(r'([0-9][0-9\,]+[0-9])')
-_decimal_number_re = re.compile(r'([0-9]+\.[0-9]+)')
-_pounds_re = re.compile(r'£([0-9\,]*[0-9]+)')
-_dollars_re = re.compile(r'\$([0-9\.\,]*[0-9]+)')
+_comma_number_re = re.compile(r"([0-9][0-9\,]+[0-9])")
+_decimal_number_re = re.compile(r"([0-9]+\.[0-9]+)")
+_pounds_re = re.compile(r"£([0-9\,]*[0-9]+)")
+_dollars_re = re.compile(r"\$([0-9\.\,]*[0-9]+)")
 # _ordinal_re = re.compile(r'[0-9]+(st|nd|rd|th)')
-_number_re = re.compile(r'[0-9]+')
+_number_re = re.compile(r"[0-9]+")
 
 
 def _remove_commas(m):
-    return m.group(1).replace(',', '')
+    return m.group(1).replace(",", "")
 
 
 def _expand_decimal_point(m):
-    return m.group(1).replace('.', ' chấm ')
+    return m.group(1).replace(".", " chấm ")
 
 
 def _expand_dollars(m):
     match = m.group(1)
-    parts = match.split('.')
+    parts = match.split(".")
     if len(parts) > 2:
-        return match + ' dollars'
+        return match + " dollars"
     dollars = int(parts[0]) if parts[0] else 0
     cents = int(parts[1]) if len(parts) > 1 and parts[1] else 0
     if dollars and cents:
-        dollar_unit = 'dollar' if dollars == 1 else 'dollars'
-        cent_unit = 'cent' if cents == 1 else 'cents'
-        return '%s %s, %s %s' % (dollars, dollar_unit, cents, cent_unit)
+        dollar_unit = "dollar" if dollars == 1 else "dollars"
+        cent_unit = "cent" if cents == 1 else "cents"
+        return "%s %s, %s %s" % (dollars, dollar_unit, cents, cent_unit)
     elif dollars:
-        dollar_unit = 'dollar' if dollars == 1 else 'dollars'
-        return '%s %s' % (dollars, dollar_unit)
+        dollar_unit = "dollar" if dollars == 1 else "dollars"
+        return "%s %s" % (dollars, dollar_unit)
     elif cents:
-        cent_unit = 'cent' if cents == 1 else 'cents'
-        return '%s %s' % (cents, cent_unit)
+        cent_unit = "cent" if cents == 1 else "cents"
+        return "%s %s" % (cents, cent_unit)
     else:
-        return 'zero dollars'
+        return "zero dollars"
 
 
 def _expand_ordinal(m):
@@ -57,7 +57,7 @@ def _expand_number(m):
     #     elif num % 100 == 0:
     #         return _inflect.number_to_words(num // 100) + ' hundred'
     #     else:
-    #         return _inflect.number_to_words(num, andword='', zero='oh', 
+    #         return _inflect.number_to_words(num, andword='', zero='oh',
     #                                         group=2).replace(', ', ' ')
     # else:
     #     return _inflect.number_to_words(num, andword='')
@@ -74,5 +74,6 @@ def normalize_numbers(text):
     text = re.sub(_number_re, _expand_number, text)
     return text
 
-if __name__ == '__main__':
-    print(normalize_numbers('12344567'))
+
+if __name__ == "__main__":
+    print(normalize_numbers("12344567"))

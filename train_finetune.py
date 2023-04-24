@@ -3,7 +3,8 @@ from tqdm import tqdm
 
 import torch
 from torch.utils.data import DataLoader
-#from torch.utils.tensorboard import SummaryWriter
+
+# from torch.utils.tensorboard import SummaryWriter
 
 import params as params
 from model import GradTTS
@@ -53,140 +54,182 @@ if __name__ == "__main__":
     torch.manual_seed(random_seed)
     np.random.seed(random_seed)
 
-    print('Initializing logger...')
-    #logger = SummaryWriter(log_dir=log_dir)
+    print("Initializing logger...")
+    # logger = SummaryWriter(log_dir=log_dir)
 
-    print('Initializing data loaders...')
-    train_dataset = TextMelDataset(train_filelist_path, bndict_path, add_blank,
-                                   n_fft, n_feats, sample_rate, hop_length,
-                                   win_length, f_min, f_max)
+    print("Initializing data loaders...")
+    train_dataset = TextMelDataset(
+        train_filelist_path,
+        bndict_path,
+        add_blank,
+        n_fft,
+        n_feats,
+        sample_rate,
+        hop_length,
+        win_length,
+        f_min,
+        f_max,
+    )
     batch_collate = TextMelBatchCollate()
-    loader = DataLoader(dataset=train_dataset, batch_size=batch_size,
-                        collate_fn=batch_collate, drop_last=True,
-                        num_workers=4, shuffle=False)
-    test_dataset = TextMelDataset(valid_filelist_path, bndict_path, add_blank,
-                                  n_fft, n_feats, sample_rate, hop_length,
-                                  win_length, f_min, f_max)
+    loader = DataLoader(
+        dataset=train_dataset,
+        batch_size=batch_size,
+        collate_fn=batch_collate,
+        drop_last=True,
+        num_workers=4,
+        shuffle=False,
+    )
+    test_dataset = TextMelDataset(
+        valid_filelist_path,
+        bndict_path,
+        add_blank,
+        n_fft,
+        n_feats,
+        sample_rate,
+        hop_length,
+        win_length,
+        f_min,
+        f_max,
+    )
 
     # print('Initializing model...')
-    # model = GradTTS(nsymbols, 1, None, n_enc_channels, filter_channels, filter_channels_dp, 
-    #                 n_heads, n_enc_layers, enc_kernel, enc_dropout, window_size, 
+    # model = GradTTS(nsymbols, 1, None, n_enc_channels, filter_channels, filter_channels_dp,
+    #                 n_heads, n_enc_layers, enc_kernel, enc_dropout, window_size,
     #                 n_feats, dec_dim, beta_min, beta_max, pe_scale).cuda()
 
     # NOTE: Temporary code for continue training from certain epoch:
     print("Loading trained model...")
-    model = GradTTS(nsymbols, 1, 64, n_enc_channels, filter_channels, filter_channels_dp, 
-                    n_heads, n_enc_layers, enc_kernel, enc_dropout, window_size, 
-                    n_feats, dec_dim, beta_min, beta_max, pe_scale)
-    model.load_state_dict(torch.load(params.chkpt_path, map_location=lambda loc, storage: loc))
+    model = GradTTS(
+        nsymbols,
+        1,
+        64,
+        n_enc_channels,
+        filter_channels,
+        filter_channels_dp,
+        n_heads,
+        n_enc_layers,
+        enc_kernel,
+        enc_dropout,
+        window_size,
+        n_feats,
+        dec_dim,
+        beta_min,
+        beta_max,
+        pe_scale,
+    )
+    model.load_state_dict(
+        torch.load(params.chkpt_path, map_location=lambda loc, storage: loc)
+    )
     model = model.cuda()
 
     # Freeze all except speaker embedding
-    #model.encoder.requires_grad_(False)
-    #model.decoder.requires_grad_(True)
-    #model.decoder.estimator.mlp.requires_grad_(True)
+    # model.encoder.requires_grad_(False)
+    # model.decoder.requires_grad_(True)
+    # model.decoder.estimator.mlp.requires_grad_(True)
     # # Init new speaker embedding
     # model.spk_emb = torch.nn.Embedding(1, 64)
 
-    print('Number of encoder + duration predictor parameters: %.2fm' % (model.encoder.nparams/1e6))
-    print('Number of decoder parameters: %.2fm' % (model.decoder.nparams/1e6))
-    print('Total parameters: %.2fm' % (model.nparams/1e6))
+    print(
+        "Number of encoder + duration predictor parameters: %.2fm"
+        % (model.encoder.nparams / 1e6)
+    )
+    print("Number of decoder parameters: %.2fm" % (model.decoder.nparams / 1e6))
+    print("Total parameters: %.2fm" % (model.nparams / 1e6))
 
-    print('Initializing optimizer...')
+    print("Initializing optimizer...")
     optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
-    print('Logging test batch...')
+    print("Logging test batch...")
     test_batch = test_dataset.sample_test_batch(size=params.test_size)
     for i, item in enumerate(test_batch):
-        mel = item['y']
-        #logger.add_image(f'image_{i}/ground_truth', plot_tensor(mel.squeeze()),
-         #                global_step=0, dataformats='HWC')
-        save_plot(mel.squeeze(), f'{log_dir}/original_{i}.png')
+        mel = item["y"]
+        # logger.add_image(f'image_{i}/ground_truth', plot_tensor(mel.squeeze()),
+        #                global_step=0, dataformats='HWC')
+        save_plot(mel.squeeze(), f"{log_dir}/original_{i}.png")
 
-    print('Start training...')
+    print("Start training...")
     print(len(train_dataset))
     iteration = 0
     for epoch in range(1, n_epochs + 1):
-    # iteration = params.curr_chkpt * 125 # NOTE: 287 for vietnamese, 125 for bahnar
-    # for epoch in range(params.curr_chkpt + 1, n_epochs + 1):
+        # iteration = params.curr_chkpt * 125 # NOTE: 287 for vietnamese, 125 for bahnar
+        # for epoch in range(params.curr_chkpt + 1, n_epochs + 1):
         model.train()
         dur_losses = []
         prior_losses = []
         diff_losses = []
-        with tqdm(loader, total=len(train_dataset)//batch_size) as progress_bar:
+        with tqdm(loader, total=len(train_dataset) // batch_size) as progress_bar:
             for batch_idx, batch in enumerate(progress_bar):
                 model.zero_grad()
-                x, x_lengths = batch['x'].cuda(), batch['x_lengths'].cuda()
-                y, y_lengths = batch['y'].cuda(), batch['y_lengths'].cuda()
-                spk =  torch.LongTensor([1]*x.shape[0]).cuda()
+                x, x_lengths = batch["x"].cuda(), batch["x_lengths"].cuda()
+                y, y_lengths = batch["y"].cuda(), batch["y_lengths"].cuda()
+                spk = torch.LongTensor([1] * x.shape[0]).cuda()
                 spk = spk.to(torch.long).cuda()
-                dur_loss, prior_loss, diff_loss = model.compute_loss(x, x_lengths,
-                                                                     y, y_lengths,
-                                                                     out_size=out_size,
-                                                                     spk=spk) # NOTE: finetune trained speaker embedding
+                dur_loss, prior_loss, diff_loss = model.compute_loss(
+                    x, x_lengths, y, y_lengths, out_size=out_size, spk=spk
+                )  # NOTE: finetune trained speaker embedding
                 loss = sum([dur_loss, prior_loss, diff_loss])
                 loss.backward()
 
-                enc_grad_norm = torch.nn.utils.clip_grad_norm_(model.encoder.parameters(),
-                                                               max_norm=1)
-                dec_grad_norm = torch.nn.utils.clip_grad_norm_(model.decoder.parameters(),
-                                                               max_norm=1)
+                enc_grad_norm = torch.nn.utils.clip_grad_norm_(
+                    model.encoder.parameters(), max_norm=1
+                )
+                dec_grad_norm = torch.nn.utils.clip_grad_norm_(
+                    model.decoder.parameters(), max_norm=1
+                )
                 optimizer.step()
 
-                #logger.add_scalar('training/duration_loss', dur_loss.item(),
-                                  #global_step=iteration)
-                #logger.add_scalar('training/prior_loss', prior_loss.item(),
-                                  #global_step=iteration)
-                #logger.add_scalar('training/diffusion_loss', diff_loss.item(),
-                                  #global_step=iteration)
-                #logger.add_scalar('training/encoder_grad_norm', enc_grad_norm,
-                                  #global_step=iteration)
-                #logger.add_scalar('training/decoder_grad_norm', dec_grad_norm,
-                                  #global_step=iteration)
-                
+                # logger.add_scalar('training/duration_loss', dur_loss.item(),
+                # global_step=iteration)
+                # logger.add_scalar('training/prior_loss', prior_loss.item(),
+                # global_step=iteration)
+                # logger.add_scalar('training/diffusion_loss', diff_loss.item(),
+                # global_step=iteration)
+                # logger.add_scalar('training/encoder_grad_norm', enc_grad_norm,
+                # global_step=iteration)
+                # logger.add_scalar('training/decoder_grad_norm', dec_grad_norm,
+                # global_step=iteration)
+
                 dur_losses.append(dur_loss.item())
                 prior_losses.append(prior_loss.item())
                 diff_losses.append(diff_loss.item())
-                
+
                 if batch_idx % 5 == 0:
-                    msg = f'Epoch: {epoch}, iteration: {iteration} | dur_loss: {dur_loss.item()}, prior_loss: {prior_loss.item()}, diff_loss: {diff_loss.item()}'
+                    msg = f"Epoch: {epoch}, iteration: {iteration} | dur_loss: {dur_loss.item()}, prior_loss: {prior_loss.item()}, diff_loss: {diff_loss.item()}"
                     progress_bar.set_description(msg)
-                
+
                 iteration += 1
 
-        log_msg = 'Epoch %d: duration loss = %.3f ' % (epoch, np.mean(dur_losses))
-        log_msg += '| prior loss = %.3f ' % np.mean(prior_losses)
-        log_msg += '| diffusion loss = %.3f\n' % np.mean(diff_losses)
-        with open(f'{log_dir}/train.log', 'a') as f:
+        log_msg = "Epoch %d: duration loss = %.3f " % (epoch, np.mean(dur_losses))
+        log_msg += "| prior loss = %.3f " % np.mean(prior_losses)
+        log_msg += "| diffusion loss = %.3f\n" % np.mean(diff_losses)
+        with open(f"{log_dir}/train.log", "a") as f:
             f.write(log_msg)
 
         if epoch % params.save_every > 0:
             continue
 
         model.eval()
-        print('Synthesis...')
+        print("Synthesis...")
         with torch.no_grad():
             for i, item in enumerate(test_batch):
-                x = item['x'].to(torch.long).unsqueeze(0).cuda()
+                x = item["x"].to(torch.long).unsqueeze(0).cuda()
                 x_lengths = torch.LongTensor([x.shape[-1]]).cuda()
-                spk =  torch.LongTensor([1])
+                spk = torch.LongTensor([1])
                 spk = spk.to(torch.long).cuda()
                 y_enc, y_dec, attn = model(x, x_lengths, n_timesteps=50, spk=spk)
-                #logger.add_image(f'image_{i}/generated_enc',
-                                # plot_tensor(y_enc.squeeze().cpu()),
-                                 #global_step=iteration, dataformats='HWC')
-                #logger.add_image(f'image_{i}/generated_dec',
-                                 #plot_tensor(y_dec.squeeze().cpu()),
-                                 #global_step=iteration, dataformats='HWC')
-                #logger.add_image(f'image_{i}/alignment',
+                # logger.add_image(f'image_{i}/generated_enc',
+                # plot_tensor(y_enc.squeeze().cpu()),
+                # global_step=iteration, dataformats='HWC')
+                # logger.add_image(f'image_{i}/generated_dec',
+                # plot_tensor(y_dec.squeeze().cpu()),
+                # global_step=iteration, dataformats='HWC')
+                # logger.add_image(f'image_{i}/alignment',
                 #                 plot_tensor(attn.squeeze().cpu()),
                 #                 global_step=iteration, dataformats='HWC')
-                save_plot(y_enc.squeeze().cpu(), 
-                          f'{log_dir}/generated_enc_{i}.png')
-                save_plot(y_dec.squeeze().cpu(), 
-                          f'{log_dir}/generated_dec_{i}.png')
-                #save_plot(attn.squeeze().cpu(), 
-                 #         f'{log_dir}/alignment_{i}.png')
+                save_plot(y_enc.squeeze().cpu(), f"{log_dir}/generated_enc_{i}.png")
+                save_plot(y_dec.squeeze().cpu(), f"{log_dir}/generated_dec_{i}.png")
+                # save_plot(attn.squeeze().cpu(),
+                #         f'{log_dir}/alignment_{i}.png')
         if epoch % 8 == 0:
             ckpt = model.state_dict()
             torch.save(ckpt, f=f"{log_dir}/grad_{epoch+2000}.pt")

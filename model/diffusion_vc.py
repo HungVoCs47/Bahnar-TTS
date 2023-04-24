@@ -22,15 +22,21 @@ class GradLogPEstimator(BaseModule):
         in_out = list(zip(dims[:-1], dims[1:]))
 
         self.time_pos_emb = SinusoidalPosEmb(dim_base)
-        self.mlp = torch.nn.Sequential(torch.nn.Linear(dim_base, dim_base * 4), 
-                               Mish(), torch.nn.Linear(dim_base * 4, dim_base))
+        self.mlp = torch.nn.Sequential(
+            torch.nn.Linear(dim_base, dim_base * 4),
+            Mish(),
+            torch.nn.Linear(dim_base * 4, dim_base),
+        )
 
         cond_total = dim_base + 256
         if use_ref_t:
             self.ref_block = RefBlock(out_dim=dim_cond, time_emb_dim=dim_base)
             cond_total += dim_cond
-        self.cond_block = torch.nn.Sequential(torch.nn.Linear(cond_total, 4 * dim_cond),
-                                      Mish(), torch.nn.Linear(4 * dim_cond, dim_cond))
+        self.cond_block = torch.nn.Sequential(
+            torch.nn.Linear(cond_total, 4 * dim_cond),
+            Mish(),
+            torch.nn.Linear(4 * dim_cond, dim_cond),
+        )
 
         self.downs = torch.nn.ModuleList([])
         self.ups = torch.nn.ModuleList([])
@@ -38,11 +44,16 @@ class GradLogPEstimator(BaseModule):
 
         for ind, (dim_in, dim_out) in enumerate(in_out):
             is_last = ind >= (num_resolutions - 1)
-            self.downs.append(torch.nn.ModuleList([
-                       ResnetBlock(dim_in, dim_out, time_emb_dim=dim_base),
-                       ResnetBlock(dim_out, dim_out, time_emb_dim=dim_base),
-                       Residual(Rezero(LinearAttention(dim_out))),
-                       Downsample(dim_out) if not is_last else torch.nn.Identity()]))
+            self.downs.append(
+                torch.nn.ModuleList(
+                    [
+                        ResnetBlock(dim_in, dim_out, time_emb_dim=dim_base),
+                        ResnetBlock(dim_out, dim_out, time_emb_dim=dim_base),
+                        Residual(Rezero(LinearAttention(dim_out))),
+                        Downsample(dim_out) if not is_last else torch.nn.Identity(),
+                    ]
+                )
+            )
 
         mid_dim = dims[-1]
         self.mid_block1 = ResnetBlock(mid_dim, mid_dim, time_emb_dim=dim_base)
@@ -50,11 +61,16 @@ class GradLogPEstimator(BaseModule):
         self.mid_block2 = ResnetBlock(mid_dim, mid_dim, time_emb_dim=dim_base)
 
         for ind, (dim_in, dim_out) in enumerate(reversed(in_out[1:])):
-            self.ups.append(torch.nn.ModuleList([
-                     ResnetBlock(dim_out * 2, dim_in, time_emb_dim=dim_base),
-                     ResnetBlock(dim_in, dim_in, time_emb_dim=dim_base),
-                     Residual(Rezero(LinearAttention(dim_in))),
-                     Upsample(dim_in)]))
+            self.ups.append(
+                torch.nn.ModuleList(
+                    [
+                        ResnetBlock(dim_out * 2, dim_in, time_emb_dim=dim_base),
+                        ResnetBlock(dim_in, dim_in, time_emb_dim=dim_base),
+                        Residual(Rezero(LinearAttention(dim_in))),
+                        Upsample(dim_in),
+                    ]
+                )
+            )
         self.final_block = Block(dim_base, dim_base)
         self.final_conv = torch.nn.Conv2d(dim_base, 1, 1)
 
@@ -71,8 +87,8 @@ class GradLogPEstimator(BaseModule):
         condition = torch.cat([condition, c], 1)
 
         condition = self.cond_block(condition).unsqueeze(-1).unsqueeze(-1)
-        condition = torch.cat(x.shape[2]*[condition], 2)
-        condition = torch.cat(x.shape[3]*[condition], 3)
+        condition = torch.cat(x.shape[2] * [condition], 2)
+        condition = torch.cat(x.shape[3] * [condition], 3)
         x = torch.cat([x, condition], 1)
 
         hiddens = []
@@ -122,12 +138,12 @@ class Diffusion(BaseModule):
         return beta
 
     def get_gamma(self, s, t, p=1.0, use_torch=False):
-        beta_integral = self.beta_min + 0.5*(self.beta_max - self.beta_min)*(t + s)
-        beta_integral *= (t - s)
+        beta_integral = self.beta_min + 0.5 * (self.beta_max - self.beta_min) * (t + s)
+        beta_integral *= t - s
         if use_torch:
-            gamma = torch.exp(-0.5*p*beta_integral).unsqueeze(-1).unsqueeze(-1)
+            gamma = torch.exp(-0.5 * p * beta_integral).unsqueeze(-1).unsqueeze(-1)
         else:
-            gamma = math.exp(-0.5*p*beta_integral)
+            gamma = math.exp(-0.5 * p * beta_integral)
         return gamma
 
     def get_mu(self, s, t):
@@ -162,57 +178,72 @@ class Diffusion(BaseModule):
         return xt * mask, z * mask
 
     @torch.no_grad()
-    def reverse_diffusion(self, z, mask, mean, ref, ref_mask, mean_ref, c, 
-                          n_timesteps, mode):
+    def reverse_diffusion(
+        self, z, mask, mean, ref, ref_mask, mean_ref, c, n_timesteps, mode
+    ):
         h = 1.0 / n_timesteps
         xt = z * mask
         for i in range(n_timesteps):
-            t = 1.0 - i*h
+            t = 1.0 - i * h
             time = t * torch.ones(z.shape[0], dtype=z.dtype, device=z.device)
             beta_t = self.get_beta(t)
             xt_ref = [self.compute_diffused_mean(ref, ref_mask, mean_ref, t)]
-#            for j in range(15):
-#                xt_ref += [self.compute_diffused_mean(ref, ref_mask, mean_ref, (j+0.5)/15.0)]
+            #            for j in range(15):
+            #                xt_ref += [self.compute_diffused_mean(ref, ref_mask, mean_ref, (j+0.5)/15.0)]
             xt_ref = torch.stack(xt_ref, 1)
-            if mode == 'pf':
-                dxt = 0.5 * (mean - xt - self.estimator(xt, mask, mean, xt_ref, ref_mask, c, time)) * (beta_t * h)
+            if mode == "pf":
+                dxt = (
+                    0.5
+                    * (
+                        mean
+                        - xt
+                        - self.estimator(xt, mask, mean, xt_ref, ref_mask, c, time)
+                    )
+                    * (beta_t * h)
+                )
             else:
-                if mode == 'ml':
-                    kappa = self.get_gamma(0, t - h) * (1.0 - self.get_gamma(t - h, t, p=2.0))
-                    kappa /= (self.get_gamma(0, t) * beta_t * h)
+                if mode == "ml":
+                    kappa = self.get_gamma(0, t - h) * (
+                        1.0 - self.get_gamma(t - h, t, p=2.0)
+                    )
+                    kappa /= self.get_gamma(0, t) * beta_t * h
                     kappa -= 1.0
                     omega = self.get_nu(t - h, t) / self.get_gamma(0, t)
                     omega += self.get_mu(t - h, t)
-                    omega -= (0.5 * beta_t * h + 1.0)
+                    omega -= 0.5 * beta_t * h + 1.0
                     sigma = self.get_sigma(t - h, t)
                 else:
                     kappa = 0.0
                     omega = 0.0
                     sigma = math.sqrt(beta_t * h)
                 dxt = (mean - xt) * (0.5 * beta_t * h + omega)
-                dxt -= self.estimator(xt, mask, mean, xt_ref, ref_mask, c, time) * (1.0 + kappa) * (beta_t * h)
+                dxt -= (
+                    self.estimator(xt, mask, mean, xt_ref, ref_mask, c, time)
+                    * (1.0 + kappa)
+                    * (beta_t * h)
+                )
                 dxt += torch.randn_like(z, device=z.device) * sigma
             xt = (xt - dxt) * mask
         return xt
 
     @torch.no_grad()
-    def forward(self, z, mask, mean, ref, ref_mask, mean_ref, c, 
-                n_timesteps, mode):
-        if mode not in ['pf', 'em', 'ml']:
-            print('Inference mode must be one of [pf, em, ml]!')
+    def forward(self, z, mask, mean, ref, ref_mask, mean_ref, c, n_timesteps, mode):
+        if mode not in ["pf", "em", "ml"]:
+            print("Inference mode must be one of [pf, em, ml]!")
             return z
-        return self.reverse_diffusion(z, mask, mean, ref, ref_mask, mean_ref, c, 
-                                      n_timesteps, mode)
+        return self.reverse_diffusion(
+            z, mask, mean, ref, ref_mask, mean_ref, c, n_timesteps, mode
+        )
 
     def loss_t(self, x0, mask, mean, x_ref, mean_ref, c, t):
         xt, z = self.forward_diffusion(x0, mask, mean, t)
         xt_ref = [self.compute_diffused_mean(x_ref, mask, mean_ref, t, use_torch=True)]
-#        for j in range(15):
-#            xt_ref += [self.compute_diffused_mean(x_ref, mask, mean_ref, (j+0.5)/15.0)]
+        #        for j in range(15):
+        #            xt_ref += [self.compute_diffused_mean(x_ref, mask, mean_ref, (j+0.5)/15.0)]
         xt_ref = torch.stack(xt_ref, 1)
         z_estimation = self.estimator(xt, mask, mean, xt_ref, mask, c, t)
         z_estimation *= torch.sqrt(1.0 - self.get_gamma(0, t, p=2.0, use_torch=True))
-        loss = torch.sum((z_estimation + z)**2) / (torch.sum(mask)*self.n_feats)
+        loss = torch.sum((z_estimation + z) ** 2) / (torch.sum(mask) * self.n_feats)
         return loss
 
     def compute_loss(self, x0, mask, mean, x_ref, mean_ref, c, offset=1e-5):

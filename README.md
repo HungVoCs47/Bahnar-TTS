@@ -47,8 +47,8 @@ Voice conversion is a common speech synthesis task which can be solved in differ
 ## Inference End-to-End model:
 # GradTTS setup:
 You should create `Bahnar-TTS\logs\bahnar_exp ` directory and `Bahnar-TTS\checkpts\ ` directory:
-1) You can download Grad-TTS trained on Bahnar datasets (22kHz) from [here](https://drive.google.com/drive/u/1/folders/1OMXQ9_t0Vnw7oxdJFWrWZ5h64k6N94D6) and put it under directory `Bahnar-TTS\logs\bahnar_exp `.
-2) You can download HiFi-GAN trained on Bahnar datasets (22kHz) from [here](https://drive.google.com/drive/u/1/folders/1IdvgD1ja0WTYnFDhtoBeaXN9Is-rexUn) and put it under directory `Bahnar-TTS\checkpts\ `.
+1) You can download Grad-TTS trained on Bahnar datasets (22kHz) from [here](https://drive.google.com/drive/u/1/folders/1OMXQ9_t0Vnw7oxdJFWrWZ5h64k6N94D6) and put it under directory `Bahnar-TTS\logs\bahnar_exp `
+2) You can download HiFi-GAN trained on Bahnar datasets (22kHz) from [here](https://drive.google.com/drive/u/1/folders/1IdvgD1ja0WTYnFDhtoBeaXN9Is-rexUn) and put it under directory `Bahnar-TTS\checkpts\ `
 
 After setup phase, the repo should look like this:
 
@@ -56,56 +56,56 @@ After setup phase, the repo should look like this:
 ── Bahnar-TTS
     │
     │
-    │         
+    │
     ├── checkpts
     │     └── hifigan.pt
     │
-    └── logs 
+    └── logs
           └── bahnar_exp
                     └── grad_1344.pt
 ```
-    
+
 
 # Voice Conversion setup:
 You should create `Bahnar-TTS\checkpts_vc ` directory, under `Bahnar-TTS\checkpts_vc ` you should create 3 sub-directories:
 - `Bahnar-TTS\checkpts_vc\spk_encoder `
 - `Bahnar-TTS\checkpts_vc\vc `
 - `Bahnar-TTS\checkpts_vc\vocoder `
-1) You can download pretrained Voice Conversion (22kHz) from [here](https://drive.google.com/drive/u/1/folders/1148vd2twFbmtlsj9RKbjn1I-EnV1ntvH) and put it under directory `Bahnar-TTS\checkpts_vc\vc `.
-2) You can download pretrained Vocoder (22kHz) from [here](https://drive.google.com/drive/u/1/folders/13ZrHBWLtINTzUpXcGOI-mYOvw1lwZPIq) and put it under directory `Bahnar-TTS\checkpts_vc\vocoder `.
-3) You can download pretrained Encoder (22kHz) from [here](https://drive.google.com/drive/u/1/folders/1nu5al-OZs-jL0o5w2b5YzWDS5SWMJqUJ) and put it under directory `Bahnar-TTS\checkpts_vc\spk_encoder `.
+1) You can download pretrained Voice Conversion (22kHz) from [here](https://drive.google.com/drive/u/1/folders/1148vd2twFbmtlsj9RKbjn1I-EnV1ntvH) and put it under directory `Bahnar-TTS\checkpts_vc\vc `
+2) You can download pretrained Vocoder (22kHz) from [here](https://drive.google.com/drive/u/1/folders/13ZrHBWLtINTzUpXcGOI-mYOvw1lwZPIq) and put it under directory `Bahnar-TTS\checkpts_vc\vocoder `
+3) You can download pretrained Encoder (22kHz) from [here](https://drive.google.com/drive/u/1/folders/1nu5al-OZs-jL0o5w2b5YzWDS5SWMJqUJ) and put it under directory `Bahnar-TTS\checkpts_vc\spk_encoder `
 
 After setup phase, the repo should look like this:
 ```bash
 ── Bahnar-TTS
     └──checkpts_vc
           ├── spk_encoder
-          │         │  
+          │         │
           │         └──────  pretrained.pt
           │
-          │   
+          │
           ├── vc
-          │    │  
+          │    │
           │    └──────────── vc_vctk_wodyn.pt
           │
-          │   
+          │
           └── vocoder
-                 │  
+                 │
                  └────────── generator
 ```
 
 # Data setup:
-After put necessary all model checkpoints into `checkpts ` folder and `checkpts_vc ` folder. You should create your own data-source. You should create `Bahnar-TTS\document ` to store your own data. 
-1. Create text file with sentences you want to synthesize like `Bahnar-TTS\document\text\text.txt `.
-2. Create target audio file you want to converse the voice like `Bahnar-TTS\document\target_sound\0001.wav `.
+After put necessary all model checkpoints into `checkpts ` folder and `checkpts_vc ` folder. You should create your own data-source. You should create `Bahnar-TTS\document ` to store your own data.
+1. Create text file with sentences you want to synthesize like `Bahnar-TTS\document\text\text.txt `
+2. Create target audio file you want to converse the voice like `Bahnar-TTS\document\target_sound\0001.wav `
 You can dowload the pattern audio file and text file in this.
-After create the data source, the repo should look like this: [here](https://drive.google.com/drive/u/1/folders/1v40EtocaeHwKeP7j2eUsrTBvUYp5BIwY).
+After create the data source, the repo should look like this: [here](https://drive.google.com/drive/u/1/folders/1v40EtocaeHwKeP7j2eUsrTBvUYp5BIwY)
 ```bash
 ── Bahnar-TTS
-    └── document 
+    └── document
            ├──────── target_sound
            │           └────────── 0001.wav
-           │  
+           │
            └──────── text
                        └────────── text.txt
 ```
@@ -126,14 +126,14 @@ After create the data source, the repo should look like this: [here](https://dri
     ```bash
     python inference.py -f document/text/text.txt  -c logs\bahnar_exp\grad_1344.pt -vc document/target_sound/0001.wav
     ```
-3) After inference, check out folder called `out ` for generated audios.
+3) After inference, check out folder called `out ` for generated audios
 
 # Demo result:
 You can check the result of the end-to-end Bahnar Text-To-Speech model and Voice Conversion model here: [link](https://github.com/jik876/hifi-gan). Male voice is generated by GradTTS and Female Voice is generated by Voice Conversion model.
 
 ## References
 
-* HiFi-GAN model is used as vocoder, official github repository: [link](https://github.com/jik876/hifi-gan).
-* Monotonic Alignment Search algorithm is used for unsupervised duration modelling, official github repository: [link](https://github.com/jaywalnut310/glow-tts).
-* Phonemization utilizes CMUdict, official github repository: [link](https://github.com/cmusphinx/cmudict).
-* Voice conversion model, official github repository: [link](https://github.com/huawei-noah/Speech-Backbones/tree/main/DiffVC).
+* HiFi-GAN model is used as vocoder, official github repository: [link](https://github.com/jik876/hifi-gan)
+* Monotonic Alignment Search algorithm is used for unsupervised duration modelling, official github repository: [link](https://github.com/jaywalnut310/glow-tts)
+* Phonemization utilizes CMUdict, official github repository: [link](https://github.com/cmusphinx/cmudict)
+* Voice conversion model, official github repository: [link](https://github.com/huawei-noah/Speech-Backbones/tree/main/DiffVC)

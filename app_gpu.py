@@ -7,15 +7,14 @@ app = Flask(__name__)
 CORS(app)
 
 url = "https://bahnar.dscilab.site:20007/speak/vi_ba"
-headers = {
-          'Content-Type': 'application/json'
-          }
+headers = {"Content-Type": "application/json"}
 
-@app.route('/speak', methods=['POST'])
+
+@app.route("/speak", methods=["POST"])
 def speak():
-    payload = json.dumps({
-          "text": request.get_json()["text"]
-          })
+    payload = json.dumps({"text": request.get_json()["text"]})
     response = requests.request("POST", url, headers=headers, data=payload)
 
-    return make_response({"speech": response.json()["speech"],"speech_fm": response.json()["speech_fm"]})
+    return make_response(
+        {"speech": response.json()["speech"], "speech_fm": response.json()["speech_fm"]}
+    )

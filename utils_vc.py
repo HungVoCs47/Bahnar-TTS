@@ -12,9 +12,9 @@ from scipy.io import wavfile
 
 
 def save_plot(tensor, savepath):
-    plt.style.use('default')
+    plt.style.use("default")
     fig, ax = plt.subplots(figsize=(12, 3))
-    im = ax.imshow(tensor, aspect="auto", origin="lower", interpolation='none')
+    im = ax.imshow(tensor, aspect="auto", origin="lower", interpolation="none")
     plt.colorbar(im, ax=ax)
     plt.tight_layout()
     fig.canvas.draw()

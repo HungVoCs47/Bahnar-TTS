@@ -36,11 +36,11 @@ dim = params.enc_dim
 random_seed = params.seed
 test_size = params.test_size
 
-data_dir = '../data/LibriTTS'
-exc_file = 'filelists/exceptions_libritts.txt'
-avg_type = 'mode'
+data_dir = "../data/LibriTTS"
+exc_file = "filelists/exceptions_libritts.txt"
+avg_type = "mode"
 
-log_dir = 'logs_enc'
+log_dir = "logs_enc"
 epochs = 300
 batch_size = 128
 learning_rate = 5e-4
@@ -54,35 +54,40 @@ if __name__ == "__main__":
 
     os.makedirs(log_dir, exist_ok=True)
 
-    print('Initializing data loaders...')
+    print("Initializing data loaders...")
     train_set = VCEncDataset(data_dir, exc_file, avg_type)
     collate_fn = VCEncBatchCollate()
-    train_loader = DataLoader(train_set, batch_size=batch_size, 
-                              collate_fn=collate_fn, num_workers=4,
-                              drop_last=True)
+    train_loader = DataLoader(
+        train_set,
+        batch_size=batch_size,
+        collate_fn=collate_fn,
+        num_workers=4,
+        drop_last=True,
+    )
 
-    print('Initializing models...')
+    print("Initializing models...")
     fgl = FastGL(n_mels, sampling_rate, n_fft, hop_size).cuda()
-    model = FwdDiffusion(n_mels, channels, filters, heads, layers, kernel, 
-                         dropout, window_size, dim).cuda()
+    model = FwdDiffusion(
+        n_mels, channels, filters, heads, layers, kernel, dropout, window_size, dim
+    ).cuda()
 
-    print('Encoder:')
+    print("Encoder:")
     print(model)
-    print('Number of parameters = %.2fm\n' % (model.nparams/1e6))
+    print("Number of parameters = %.2fm\n" % (model.nparams / 1e6))
 
-    print('Initializing optimizers...')
+    print("Initializing optimizers...")
     optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
-    print('Start training.')
+    print("Start training.")
     torch.backends.cudnn.benchmark = True
     iteration = 0
     for epoch in range(1, epochs + 1):
-        print(f'Epoch: {epoch} [iteration: {iteration}]')
+        print(f"Epoch: {epoch} [iteration: {iteration}]")
         model.train()
         losses = []
-        for batch in tqdm(train_loader, total=len(train_set)//batch_size):
-            mel_x, mel_y = batch['x'].cuda(), batch['y'].cuda()
-            mel_lengths = batch['lengths'].cuda()
+        for batch in tqdm(train_loader, total=len(train_set) // batch_size):
+            mel_x, mel_y = batch["x"].cuda(), batch["y"].cuda()
+            mel_lengths = batch["lengths"].cuda()
             mel_mask = sequence_mask(mel_lengths).unsqueeze(1).to(mel_x.dtype)
 
             model.zero_grad()
@@ -95,17 +100,17 @@ if __name__ == "__main__":
             iteration += 1
 
         losses = np.asarray(losses)
-        msg = 'Epoch %d: loss = %.4f\n' % (epoch, np.mean(losses))
+        msg = "Epoch %d: loss = %.4f\n" % (epoch, np.mean(losses))
         print(msg)
-        with open(f'{log_dir}/train_enc.log', 'a') as f:
+        with open(f"{log_dir}/train_enc.log", "a") as f:
             f.write(msg)
         losses = []
- 
+
         if epoch % save_every > 0:
             continue
 
         model.eval()
-        print('Inference...\n')
+        print("Inference...\n")
         with torch.no_grad():
             mels = train_set.get_test_dataset()
             for i, (mel_x, mel_y) in enumerate(mels):
@@ -116,17 +121,17 @@ if __name__ == "__main__":
                 mel_lengths = torch.LongTensor([mel_x.shape[-1]]).cuda()
                 mel_mask = sequence_mask(mel_lengths).unsqueeze(1).to(mel_x.dtype)
                 mel = model(mel_x, mel_mask)
-                save_plot(mel.squeeze().cpu(), f'{log_dir}/generated_{i}.png')
+                save_plot(mel.squeeze().cpu(), f"{log_dir}/generated_{i}.png")
                 audio = fgl(mel)
-                save_audio(f'{log_dir}/generated_{i}.wav', sampling_rate, audio)
+                save_audio(f"{log_dir}/generated_{i}.wav", sampling_rate, audio)
                 if epoch == save_every:
-                    save_plot(mel_x.squeeze().cpu(), f'{log_dir}/source_{i}.png')
+                    save_plot(mel_x.squeeze().cpu(), f"{log_dir}/source_{i}.png")
                     audio = fgl(mel_x)
-                    save_audio(f'{log_dir}/source_{i}.wav', sampling_rate, audio)
-                    save_plot(mel_y.squeeze().cpu(), f'{log_dir}/target_{i}.png')
+                    save_audio(f"{log_dir}/source_{i}.wav", sampling_rate, audio)
+                    save_plot(mel_y.squeeze().cpu(), f"{log_dir}/target_{i}.png")
                     audio = fgl(mel_y)
-                    save_audio(f'{log_dir}/target_{i}.wav', sampling_rate, audio)
+                    save_audio(f"{log_dir}/target_{i}.wav", sampling_rate, audio)
 
-        print('Saving model...\n')
+        print("Saving model...\n")
         ckpt = model.state_dict()
         torch.save(ckpt, f=f"{log_dir}/enc.pt")

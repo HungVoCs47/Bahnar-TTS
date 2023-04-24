@@ -10,7 +10,7 @@ SV2TTS is a deep learning framework in three stages. In the first stage, one cre
 
 
 
-### Papers implemented  
+### Papers implemented
 | URL | Designation | Title | Implementation source |
 | --- | ----------- | ----- | --------------------- |
 |[**1806.04558**](https://arxiv.org/pdf/1806.04558.pdf) | **SV2TTS** | **Transfer Learning from Speaker Verification to Multispeaker Text-To-Speech Synthesis** | This repo |
@@ -57,8 +57,8 @@ For playing with the toolbox alone, I only recommend downloading [`LibriSpeech/t
 ### 5. Launch the Toolbox
 You can then try the toolbox:
 
-`python demo_toolbox.py -d <datasets_root>`  
-or  
-`python demo_toolbox.py`  
+`python demo_toolbox.py -d <datasets_root>`
+or
+`python demo_toolbox.py`
 
 depending on whether you downloaded any datasets. If you are running an X-server or if you have the error `Aborted (core dumped)`, see [this issue](https://github.com/CorentinJ/Real-Time-Voice-Cloning/issues/11#issuecomment-504733590).

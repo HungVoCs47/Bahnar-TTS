@@ -15,7 +15,7 @@ from model.base import BaseModule
 
 
 def mse_loss(x, y, mask, n_feats):
-    loss = torch.sum(((x - y)**2) * mask)
+    loss = torch.sum(((x - y) ** 2) * mask)
     return loss / (torch.sum(mask) * n_feats)
 
 
@@ -67,10 +67,15 @@ class InitialReconstruction(BaseModule):
     def forward(self, stftm):
         real_part = torch.ones_like(stftm, device=stftm.device)
         imag_part = torch.zeros_like(stftm, device=stftm.device)
-        stft = torch.stack([real_part, imag_part], -1)*stftm.unsqueeze(-1)
-        istft = torchaudio.functional.istft(stft, n_fft=self.n_fft, 
-                           hop_length=self.hop_size, win_length=self.n_fft, 
-                           window=self.window, center=True)
+        stft = torch.stack([real_part, imag_part], -1) * stftm.unsqueeze(-1)
+        istft = torchaudio.functional.istft(
+            stft,
+            n_fft=self.n_fft,
+            hop_length=self.hop_size,
+            win_length=self.n_fft,
+            window=self.window,
+            center=True,
+        )
         return istft.unsqueeze(1)
 
 
@@ -95,16 +100,26 @@ class FastGL(BaseModule):
         x = x.squeeze(1)
         c = c.unsqueeze(-1)
         prev_angles = torch.zeros_like(c, device=c.device)
-        for _ in range(n_iters):        
-            s = torch.stft(x, n_fft=self.n_fft, hop_length=self.hop_size, 
-                           win_length=self.n_fft, window=self.window, 
-                           center=True)
+        for _ in range(n_iters):
+            s = torch.stft(
+                x,
+                n_fft=self.n_fft,
+                hop_length=self.hop_size,
+                win_length=self.n_fft,
+                window=self.window,
+                center=True,
+            )
             real_part, imag_part = s.unbind(-1)
             stftm = torch.sqrt(torch.clamp(real_part**2 + imag_part**2, min=1e-8))
             angles = s / stftm.unsqueeze(-1)
             s = c * (angles + self.momentum * (angles - prev_angles))
-            x = torchaudio.functional.istft(s, n_fft=self.n_fft, hop_length=self.hop_size, 
-                                            win_length=self.n_fft, window=self.window, 
-                                            center=True)
+            x = torchaudio.functional.istft(
+                s,
+                n_fft=self.n_fft,
+                hop_length=self.hop_size,
+                win_length=self.n_fft,
+                window=self.window,
+                center=True,
+            )
             prev_angles = angles
         return x.unsqueeze(1)
