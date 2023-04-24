@@ -57,19 +57,11 @@ After setup phase, the repo should look like this:
     │
     │         
     ├── checkpts
-    │     │   
-    │     │   
     │     └── hifigan.pt
-    │   
-    │     
     │
     └── logs 
-          │   
-          │   
           └── bahnar_exp
-                   │   
-                   │   
-                   └── grad_1344.pt
+                    └── grad_1344.pt
     
 
 # Voice Conversion setup:
