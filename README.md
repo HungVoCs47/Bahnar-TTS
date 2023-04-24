@@ -121,7 +121,7 @@ After create the data source, the repo should look like this:
     ```
 2) If you want to synthesize only text-to-speech with voice conversion, you should use this command:
     ```bash
-    python inference.py -f <your-text-file> -c <grad-tts-checkpoint> -t <number-of-timesteps> -s <speaker-id-if-multispeaker> - vc <target-speaker-for-voice-conversion>
+    python inference.py -f <your-text-file> -c <grad-tts-checkpoint> -t <number-of-timesteps> -s <speaker-id-if-multispeaker> -vc <target-speaker-for-voice-conversion>
     ```
     For example you can run the following command:
     ```bash
