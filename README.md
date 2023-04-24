@@ -99,6 +99,7 @@ After put necessary all model checkpoints into `checkpts ` folder and `checkpts_
 1. Create text file with sentences you want to synthesize like `Bahnar-TTS\document\text\text.txt `
 2. Create target audio file you want to converse the voice like `Bahnar-TTS\document\target_sound\0001.wav `
 You can dowload the pattern audio file and text file in this [here](https://drive.google.com/drive/u/1/folders/1v40EtocaeHwKeP7j2eUsrTBvUYp5BIwY)
+
 After create the data source, the repo should look like this: 
 ```bash
 ── Bahnar-TTS
