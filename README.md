@@ -53,12 +53,23 @@ You should create `Bahnar-TTS\logs\bahnar_exp ` directory and `Bahnar-TTS\checkp
 After setup phase, the repo should look like this:
 
 ── Bahnar-TTS
+    │
+    │
+    │         
     ├── checkpts
+    │     │   
+    │     │   
     │     └── hifigan.pt
+    │   
+    │     
     │
     └── logs 
+          │   
+          │   
           └── bahnar_exp
-                    └── grad_1344.pt
+                   │   
+                   │   
+                   └── grad_1344.pt
     
 
 # Voice Conversion setup:
