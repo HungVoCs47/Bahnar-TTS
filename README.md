@@ -121,7 +121,7 @@ After create the data source, the repo should look like this:
     ```bash
     python inference.py -f document/text/text.txt  -c logs\bahnar_exp\grad_1344.pt
     ```
-2) If you want to synthesize only text-to-speech with voice conversion, you should use this command:
+2) If you want to synthesize text-to-speech with voice conversion, you should use this command:
     ```bash
     python inference.py -f <your-text-file> -c <grad-tts-checkpoint> -t <number-of-timesteps> -s <speaker-id-if-multispeaker> -vc <target-speaker-for-voice-conversion>
     ```
