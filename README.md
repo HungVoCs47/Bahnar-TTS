@@ -72,7 +72,7 @@ You should create `Bahnar-TTS\checkpts_vc ` directory, under `Bahnar-TTS\checkpt
 - `Bahnar-TTS\checkpts_vc\vc `
 - `Bahnar-TTS\checkpts_vc\vocoder `
 1) You can download pretrained Voice Conversion (22kHz) from [here](https://drive.google.com/drive/u/1/folders/1148vd2twFbmtlsj9RKbjn1I-EnV1ntvH) and put it under directory `Bahnar-TTS\checkpts_vc\vc `
-2) You can download pretrained Vocoder (22kHz) from [here](https://drive.google.com/drive/u/1/folders/13ZrHBWLtINTzUpXcGOI-mYOvw1lwZPIq) and put it under directory `Bahnar-TTS\checkpts_vc\vocoder `
+2) You can download pretrained Vocoder (22kHz) and config from [here](https://drive.google.com/drive/u/1/folders/13ZrHBWLtINTzUpXcGOI-mYOvw1lwZPIq) and put it under directory `Bahnar-TTS\checkpts_vc\vocoder `
 3) You can download pretrained Encoder (22kHz) from [here](https://drive.google.com/drive/u/1/folders/1nu5al-OZs-jL0o5w2b5YzWDS5SWMJqUJ) and put it under directory `Bahnar-TTS\checkpts_vc\spk_encoder `
 
 After setup phase, the repo should look like this:
@@ -91,7 +91,8 @@ After setup phase, the repo should look like this:
           │
           └── vocoder
                  │
-                 └────────── generator
+                 ├──────────── generator
+                 └──────────── config.json 
 ```
 
 # Data setup:
